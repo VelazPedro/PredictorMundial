@@ -19,4 +19,72 @@ df = pd.read_csv("results.csv")
 
 # Equipos que aparecen en el fixture del 2026
 equipos_2026 = pd.unique(partidos[["Equipo 1", "Equipo 2"]].values.ravel())
-print(sorted(equipos_2026))
+#print(sorted(equipos_2026))
+
+
+ALIASES = {
+    "Alemania Federal":"Alemania",
+    "Union Sovietica": "Rusia",
+    "Checoslovaquia": "República Checa",
+    "Yugoslavia": "Serbia",
+}
+TRADUCCION = {
+    "Germany": "Alemania",
+    "Saudi Arabia": "Arabia Saudita",
+    "Algeria": "Argelia",
+    "Argentina": "Argentina",
+    "Australia": "Australia",
+    "Austria": "Austria",
+    "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+    "Brazil": "Brasil",
+    "Belgium": "Bélgica",
+    "Cape Verde": "Cabo Verde",
+    "Canada": "Canadá",
+    "Qatar": "Catar",
+    "Colombia": "Colombia",
+    "South Korea": "Corea del Sur",
+    "Ivory Coast": "Costa de Marfil",
+    "Croatia": "Croacia",
+    "Curaçao": "Curazao",
+    "Ecuador": "Ecuador",
+    "Egypt": "Egipto",
+    "Scotland": "Escocia",
+    "Spain": "España",
+    "United States": "Estados Unidos",
+    "France": "Francia",
+    "Ghana": "Ghana",
+    "Haiti": "Haití",
+    "England": "Inglaterra",
+    "Iraq": "Irak",
+    "Iran": "Irán",
+    "Japan": "Japón",
+    "Jordan": "Jordania",
+    "Morocco": "Marruecos",
+    "Mexico": "México",
+    "Norway": "Noruega",
+    "New Zealand": "Nueva Zelanda",
+    "Panama": "Panamá",
+    "Paraguay": "Paraguay",
+    "Netherlands": "Países Bajos",
+    "Portugal": "Portugal",
+    "Czech Republic": "República Checa",
+    "DR Congo": "República Democrática del Congo",
+    "Senegal": "Senegal",
+    "South Africa": "Sudáfrica",
+    "Sweden": "Suecia",
+    "Switzerland": "Suiza",
+    "Turkey": "Turquía",
+    "Tunisia": "Túnez",
+    "Uruguay": "Uruguay",
+    "Uzbekistan": "Uzbekistán",
+}
+
+def traducir(nombre:str) -> str:
+    return TRADUCCION.get(nombre,nombre)
+def normalizar(nombre:str) -> str:
+    return ALIASES.get(nombre,nombre)
+
+df["date"] = pd.to_datetime(df["date"])
+df_reciente = df[df["date"] >= "2022-12-18"] #Fecha ultimo mundial
+print(df_reciente.to_string())
+
