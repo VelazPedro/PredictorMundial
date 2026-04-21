@@ -79,6 +79,7 @@ TRADUCCION = {
     "Uzbekistan": "Uzbekistán",
 }
 
+
 def traducir(nombre:str) -> str:
     return TRADUCCION.get(nombre,nombre)
 def normalizar(nombre:str) -> str:
@@ -86,5 +87,39 @@ def normalizar(nombre:str) -> str:
 
 df["date"] = pd.to_datetime(df["date"])
 df_reciente = df[df["date"] >= "2022-12-18"] #Fecha ultimo mundial
-print(df_reciente.to_string())
 
+df_reciente["home_team"] = df_reciente["home_team"].apply(traducir)
+df_reciente["away_team"] = df_reciente["away_team"].apply(traducir)
+
+@dataclass
+class Seleccion:
+    nombre: str
+    puntaje: int=0
+
+def cargar_datos_recientes(tabla: pd.DataFrame) -> dict[str,Seleccion]:
+    selecciones: dict[str,Seleccion] = {}
+    equipos = pd.unique(tabla[["home_team","away_team"]].values.ravel())
+    for equipo in equipos:
+        if equipo not in selecciones:
+            selecciones[equipo] = Seleccion(nombre=equipo)
+    return selecciones
+
+selecciones = cargar_datos_recientes(df_reciente)
+
+def calcular_puntaje_reciente(df: pd.DataFrame, selecciones: dict[str, Seleccion]) -> None:
+    for _, fila in df.iterrows():
+        if pd.isna(fila["home_score"]) or pd.isna(fila["away_score"]):
+            continue
+        local = fila["home_team"]
+        visitante = fila["away_team"]
+        diff = fila["home_score"] - fila["away_score"]
+
+        if local in selecciones:
+            selecciones[local].puntaje += diff * 1
+        if visitante in selecciones:
+            selecciones[visitante].puntaje -= diff * 1
+calcular_puntaje_reciente(df_reciente,selecciones)
+for sel in sorted(selecciones.values(), key=lambda s:s.puntaje,reverse=True):
+    print(f"{sel.nombre:<25} Puntaje: {sel.puntaje:>8.2f}")
+
+    
