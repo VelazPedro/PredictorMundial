@@ -21,12 +21,64 @@ ALIASES = {
     "Checoslovaquia": "República Checa",
     "Yugoslavia": "Serbia",
 }
+TRADUCCION = {
+    "Germany": "Alemania",
+    "Saudi Arabia": "Arabia Saudita",
+    "Algeria": "Argelia",
+    "Argentina": "Argentina",
+    "Australia": "Australia",
+    "Austria": "Austria",
+    "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+    "Brazil": "Brasil",
+    "Belgium": "Bélgica",
+    "Cape Verde": "Cabo Verde",
+    "Canada": "Canadá",
+    "Qatar": "Catar",
+    "Colombia": "Colombia",
+    "South Korea": "Corea del Sur",
+    "Ivory Coast": "Costa de Marfil",
+    "Croatia": "Croacia",
+    "Curaçao": "Curazao",
+    "Ecuador": "Ecuador",
+    "Egypt": "Egipto",
+    "Scotland": "Escocia",
+    "Spain": "España",
+    "United States": "Estados Unidos",
+    "France": "Francia",
+    "Ghana": "Ghana",
+    "Haiti": "Haití",
+    "England": "Inglaterra",
+    "Iraq": "Irak",
+    "Iran": "Irán",
+    "Japan": "Japón",
+    "Jordan": "Jordania",
+    "Morocco": "Marruecos",
+    "Mexico": "México",
+    "Norway": "Noruega",
+    "New Zealand": "Nueva Zelanda",
+    "Panama": "Panamá",
+    "Paraguay": "Paraguay",
+    "Netherlands": "Países Bajos",
+    "Portugal": "Portugal",
+    "Czech Republic": "República Checa",
+    "DR Congo": "República Democrática del Congo",
+    "Senegal": "Senegal",
+    "South Africa": "Sudáfrica",
+    "Sweden": "Suecia",
+    "Switzerland": "Suiza",
+    "Turkey": "Turquía",
+    "Tunisia": "Túnez",
+    "Uruguay": "Uruguay",
+    "Uzbekistan": "Uzbekistán",
+}
 PUNTAJES = {
     "Campeón": 10,
     "Subcampeón": 6,
     "Tercer lugar": 4,
     "Cuarto lugar":2,
 }
+def traducir(nombre:str) -> str:
+    return TRADUCCION.get(nombre,nombre)
 def normalizar(nombre:str) -> str:
     return ALIASES.get(nombre,nombre)
 
@@ -65,9 +117,43 @@ selecciones = cargar_datos(tabla_ediciones)
 tablaPartido = tablasPartido[2]
 partidos = tablaPartido[["Equipo 1", "Equipo 2"]].dropna(subset=["Equipo 1", "Equipo 2"])
 
-#Mostrar resultado por puntaje
-#for sel in sorted(selecciones.values(), key=lambda s:s.puntaje,reverse=True):
- #   print(f"{sel.nombre:<25} Puntaje:{sel.puntaje:>3} Mundiales: {sel.mundiales_jugados}")
+
+
+
+
+
+
+df = pd.read_csv("results.csv")
+
+df["date"] = pd.to_datetime(df["date"])
+df_reciente = df[df["date"] >= "2022-12-18"] #Fecha ultimo mundial
+
+df_reciente["home_team"] = df_reciente["home_team"].apply(traducir)
+df_reciente["away_team"] = df_reciente["away_team"].apply(traducir)
+
+def cargar_datos_recientes(tabla: pd.DataFrame, selecciones: dict[str, Seleccion]) -> None:
+    equipos = pd.unique(tabla[["home_team", "away_team"]].values.ravel())
+    for equipo in equipos:
+        if equipo not in selecciones:
+            selecciones[equipo] = Seleccion(nombre=equipo)
+
+
+def calcular_puntaje_reciente(df: pd.DataFrame, selecciones: dict[str, Seleccion]) -> None:
+    for _, fila in df.iterrows():
+        if pd.isna(fila["home_score"]) or pd.isna(fila["away_score"]):
+            continue
+        local = fila["home_team"]
+        visitante = fila["away_team"]
+        diff = fila["home_score"] - fila["away_score"]
+
+        if local in selecciones:
+            selecciones[local].puntaje += diff * 1
+        if visitante in selecciones:
+            selecciones[visitante].puntaje -= diff * 1
+
+selecciones = cargar_datos(tabla_ediciones)      
+cargar_datos_recientes(df_reciente, selecciones) 
+calcular_puntaje_reciente(df_reciente, selecciones)
 
 for _, partido in partidos.iterrows():
     nombre1 = normalizar(partido["Equipo 1"].strip())
@@ -88,3 +174,5 @@ for _, partido in partidos.iterrows():
         print(f"Empate técnico: {nombre1} y {nombre2} ({pts1} pts)")
 
 
+ganador = max(selecciones.values(), key=lambda s: s.puntaje)
+print(f"El favorito es {ganador.nombre} con {ganador.puntaje:.2f} puntos")
