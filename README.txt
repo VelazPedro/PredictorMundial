@@ -4,5 +4,5 @@ Obtiene datos históricos de resultados mundialistas desde Wikipedia y predice e
 
 # Requiere lo siguiente:
 - Python 3.10+
-- pip install pandas requests lxml beautifulsoup4
+- pip install pandas lxml beautifulsoup4
 
